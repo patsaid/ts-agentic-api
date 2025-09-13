@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: agent-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build: .
+    container_name: agent-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/agentdb
+      - NODE_ENV=development
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - mongo
+    command: sh -c "npm install && npx ts-node src/index.ts"
+
+volumes:
+  mongo-data:
