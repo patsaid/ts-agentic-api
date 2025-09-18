@@ -104,4 +104,71 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+
+/**
+ * @swagger
+ * /users/login:
+ *   post:
+ *     summary: Log in an existing user
+ *     description: Authenticate a user with email and password, returning basic user info.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "patrick@example.com"
+ *               password:
+ *                 type: string
+ *                 example: "mypassword123"
+ *     responses:
+ *       200:
+ *         description: Successfully authenticated user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   example: "64c9f4f8c2d5f2e4b8d12345"
+ *                 email:
+ *                   type: string
+ *                   example: "patrick@example.com"
+ *       400:
+ *         description: Invalid email or password
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid email or password"
+ *       500:
+ *         description: Server error
+ */
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.hashed_password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
+    res.json({ _id: user._id, email: user.email });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
